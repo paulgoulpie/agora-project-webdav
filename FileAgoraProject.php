@@ -1,9 +1,8 @@
 <?php
 use Sabre\DAV;
 use Sabre\DAV\Exception;
-use function GuzzleHttp\Psr7\mimetype_from_filename;
 
-require_once '../app/misc/google-api-php-client/vendor/guzzlehttp/psr7/src/functions.php';
+require_once '../app/misc/google-api-php-client/vendor/guzzlehttp/psr7/src/MimeType.php';
 
 class FileAgoraProject extends DAV\File
 {
@@ -22,15 +21,15 @@ class FileAgoraProject extends DAV\File
 
     private $directoryAgoraProjectParent;
 
-    function __construct($idFile, $strName, $size, $nom_reel, $lastModified, $pdo, $directoryAgoraProjectParent = NULL)
+    function __construct($idFile, $strName, $nom_reel, $lastModified, $pdo, $directoryAgoraProjectParent = NULL)
     {
         $this->strName = $strName;
         $this->idFile = $idFile;
         $this->pdo = $pdo;
-        $this->size = $size;
         $this->nom_reel = $nom_reel;
         $this->lastModified = $lastModified;
         $this->directoryAgoraProjectParent = $directoryAgoraProjectParent;
+        $this->size = filesize($this->generateRealPath());
     }
 
     function getName()
@@ -51,7 +50,7 @@ class FileAgoraProject extends DAV\File
     function getContentType()
     {
         $result = null;
-        $result = mimetype_from_filename($this->nom_reel);
+        $result = GuzzleHttp\Psr7\MimeType::fromFilename($this->nom_reel);
         return $result;
     }
 

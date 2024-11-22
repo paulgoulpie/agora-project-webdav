@@ -84,7 +84,6 @@ class DirectoryAgoraProject extends DAV\Collection
         $sqlFileRequest = sprintf("
             SELECT DISTINCT `ap_file`.`_id`,
                             `ap_file`.`name`,
-                            `ap_file`.`octetSize`,
                             `ap_fileVersion`.`realName`,
                             UNIX_TIMESTAMP(`ap_file`.`dateCrea`) AS `date_crea`,
                             UNIX_TIMESTAMP(`ap_file`.`dateModif`) AS `date_modif`
@@ -121,7 +120,7 @@ class DirectoryAgoraProject extends DAV\Collection
         $result = $pdostatement->fetchAll();
 
         foreach ($result as $value)
-            $children[] = new FileAgoraProject($value['_id'], $value['name'], $value['octetSize'], $value['realName'], (($value['date_modif'] != NULL) ? $value['date_modif'] : $value['date_crea']), $this->pdo, $this);
+            $children[] = new FileAgoraProject($value['_id'], $value['name'], $value['realName'], (($value['date_modif'] != NULL) ? $value['date_modif'] : $value['date_crea']), $this->pdo, $this);
 
         return $children;
     }

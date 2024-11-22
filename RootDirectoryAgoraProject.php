@@ -11,7 +11,7 @@ class RootDirectoryAgoraProject extends DirectoryAgoraProject
                             UNIX_TIMESTAMP(`ap_space`.`dateCrea`) AS `date_crea`,
                             UNIX_TIMESTAMP(`ap_space`.`dateModif`) AS `date_modif`
             FROM `ap_space`,`ap_joinSpaceUser`
-            WHERE `ap_joinSpaceUser`.`_idSpace` = `ap_space`.`_id` AND  `ap_joinSpaceUser`.`_idUser` = :user_id 
+            WHERE `ap_joinSpaceUser`.`_idSpace` = `ap_space`.`_id` AND (`ap_joinSpaceUser`.`_idUser` = :user_id  OR `ap_joinSpaceUser`.`allUsers` = 1)
             ORDER BY `ap_space`.`name` ASC
             ");
 

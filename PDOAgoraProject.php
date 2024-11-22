@@ -1,8 +1,8 @@
 <?php
 use Sabre\DAV\Auth\Backend\AbstractBasic;
 
-require_once '../app/Common/MdlObjectAttributes.php';
-require_once '../app/Common/MdlObjectMenus.php';
+require_once '../app/Common/MdlObjectMisc.php';
+require_once '../app/Common/MdlObjectMenu.php';
 require_once '../app/Common/MdlObject.php';
 require_once '../app/Common/MdlPerson.php';
 require_once '../app/ModUser/MdlUser.php';
@@ -26,9 +26,10 @@ class PDOAgoraProject extends AbstractBasic {
 		$stmt->execute([$username]);
 		$result_db = $stmt->fetch();
 		$hashPassDb = $result_db['password'];
-		$hashPassHtml = MdlUser::passwordSha1($password); 
-				
-		if ($hashPassHtml == $hashPassDb)
+		$hashPassHtml = MdlUser::passwordSha1($password);
+		$passVerified = password_verify($password,$hashPassDb);
+
+		if ($passVerified || $hashPassHtml == $hashPassDb)
 		{
 			$result = true;
 			$this->idUser = $result_db['_id'];
