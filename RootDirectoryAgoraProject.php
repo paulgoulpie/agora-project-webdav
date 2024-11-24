@@ -22,16 +22,8 @@ class RootDirectoryAgoraProject extends DirectoryAgoraProject
 
         $children = [];
         
-        if (count($result) == 1)
-        {
-            $directoryagoraproject = new DirectoryAgoraProject(1,NULL,NULL,$this->pdo,$this->authBackend,$this,$result[0]['_id']); 
-            $children = $directoryagoraproject->getChildren();
-        }
-        else
-        {
-            foreach ($result as $value)
-                $children[] = new DirectoryAgoraProject(1, $value['name'], (($value['date_modif'] != NULL) ? $value['date_modif'] : $value['date_crea']), $this->pdo, $this->authBackend, $this,$value['_id']);            
-        }
+        foreach ($result as $value)
+            $children[] = new DirectoryAgoraProject(1, $value['name'], (($value['date_modif'] != NULL) ? $value['date_modif'] : $value['date_crea']), $this->pdo, $this->authBackend, $this,$value['_id']);
 
         return $children;
     }
