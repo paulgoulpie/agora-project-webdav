@@ -5,17 +5,17 @@ namespace Sabre\VObject\Component;
 use Sabre\VObject;
 
 /**
- * The VTimeZone component
+ * The VTimeZone component.
  *
  * This component adds functionality to a component, specific for VTIMEZONE
  * components.
  *
- * @copyright Copyright (C) 2011-2015 fruux GmbH (https://fruux.com/).
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class VTimeZone extends VObject\Component {
-
+class VTimeZone extends VObject\Component
+{
     /**
      * Returns the PHP DateTimeZone for this VTIMEZONE component.
      *
@@ -24,10 +24,9 @@ class VTimeZone extends VObject\Component {
      *
      * @return \DateTimeZone
      */
-    function getTimeZone() {
-
-        return VObject\TimeZoneUtil::getTimeZone((string)$this->TZID, $this->root);
-
+    public function getTimeZone()
+    {
+        return VObject\TimeZoneUtil::getTimeZone((string) $this->TZID, $this->root);
     }
 
     /**
@@ -41,27 +40,24 @@ class VTimeZone extends VObject\Component {
      *   * 1 - Must appear exactly once.
      *   * + - Must appear at least once.
      *   * * - Can appear any number of times.
+     *   * ? - May appear, but not more than once.
      *
      * @var array
      */
-    function getValidationRules() {
-
-        return array(
+    public function getValidationRules()
+    {
+        return [
             'TZID' => 1,
 
-            'LAST-MODIFICATION' => '?',
+            'LAST-MODIFIED' => '?',
             'TZURL' => '?',
 
-            // At least 1 STANDARD or DAYLIGHT must appear, or more. But both
-            // cannot appear in the same VTIMEZONE.
+            // At least 1 STANDARD or DAYLIGHT must appear.
             //
             // The validator is not specific yet to pick this up, so these
             // rules are too loose.
             'STANDARD' => '*',
             'DAYLIGHT' => '*',
-        );
-
+        ];
     }
-
 }
-

@@ -1,20 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sabre\DAV\FSExt;
 
 use Sabre\DAV;
+use Sabre\DAV\FS\Node;
 
 /**
- * Directory class
+ * Directory class.
  *
- * @copyright Copyright (C) 2007-2014 fruux GmbH (https://fruux.com/).
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class Directory extends Node implements DAV\ICollection, DAV\IQuota, DAV\IMoveTarget {
-
+class Directory extends Node implements DAV\ICollection, DAV\IQuota, DAV\IMoveTarget
+{
     /**
-     * Creates a new file in the directory
+     * Creates a new file in the directory.
      *
      * Data will either be supplied as a stream resource, or in certain cases
      * as a string. Keep in mind that you may have to support either.
@@ -33,126 +36,143 @@ class Directory extends Node implements DAV\ICollection, DAV\IQuota, DAV\IMoveTa
      * return the same contents of what was submitted here, you are strongly
      * recommended to omit the ETag.
      *
-     * @param string $name Name of the file
+     * @param string          $name Name of the file
      * @param resource|string $data Initial payload
-     * @return null|string
+     *
+     * @return string|null
      */
-    function createFile($name, $data = null) {
-
+    public function createFile($name, $data = null)
+    {
         // We're not allowing dots
-        if ($name=='.' || $name=='..') throw new DAV\Exception\Forbidden('Permission denied to . and ..');
-        $newPath = $this->path . '/' . $name;
-        file_put_contents($newPath,$data);
+        if ('.' == $name || '..' == $name) {
+            throw new DAV\Exception\Forbidden('Permission denied to . and ..');
+        }
+        $newPath = $this->path.'/'.$name;
+        file_put_contents($newPath, $data);
+        clearstatcache(true, $newPath);
 
-        return '"' . md5_file($newPath) . '"';
-
+        return '"'.sha1(
+            fileinode($newPath).
+            filesize($newPath).
+            filemtime($newPath)
+        ).'"';
     }
 
     /**
-     * Creates a new subdirectory
+     * Creates a new subdirectory.
      *
      * @param string $name
-     * @return void
      */
-    function createDirectory($name) {
-
+    public function createDirectory($name)
+    {
         // We're not allowing dots
-        if ($name=='.' || $name=='..') throw new DAV\Exception\Forbidden('Permission denied to . and ..');
-        $newPath = $this->path . '/' . $name;
+        if ('.' == $name || '..' == $name) {
+            throw new DAV\Exception\Forbidden('Permission denied to . and ..');
+        }
+        $newPath = $this->path.'/'.$name;
         mkdir($newPath);
-
+        clearstatcache(true, $newPath);
     }
 
     /**
-     * Returns a specific child node, referenced by its name
+     * Returns a specific child node, referenced by its name.
      *
      * This method must throw Sabre\DAV\Exception\NotFound if the node does not
      * exist.
      *
      * @param string $name
+     *
      * @throws DAV\Exception\NotFound
+     *
      * @return DAV\INode
      */
-    function getChild($name) {
+    public function getChild($name)
+    {
+        $path = $this->path.'/'.$name;
 
-        $path = $this->path . '/' . $name;
-
-        if (!file_exists($path)) throw new DAV\Exception\NotFound('File could not be located');
-        if ($name=='.' || $name=='..') throw new DAV\Exception\Forbidden('Permission denied to . and ..');
-
-        if (is_dir($path)) {
-
-            return new Directory($path);
-
-        } else {
-
-            return new File($path);
-
+        if (!file_exists($path)) {
+            throw new DAV\Exception\NotFound('File could not be located');
         }
-
+        if ('.' == $name || '..' == $name) {
+            throw new DAV\Exception\Forbidden('Permission denied to . and ..');
+        }
+        if (is_dir($path)) {
+            return new self($path);
+        } else {
+            return new File($path);
+        }
     }
 
     /**
      * Checks if a child exists.
      *
      * @param string $name
+     *
      * @return bool
      */
-    function childExists($name) {
-
-        if ($name=='.' || $name=='..')
+    public function childExists($name)
+    {
+        if ('.' == $name || '..' == $name) {
             throw new DAV\Exception\Forbidden('Permission denied to . and ..');
+        }
+        $path = $this->path.'/'.$name;
 
-        $path = $this->path . '/' . $name;
         return file_exists($path);
-
     }
 
     /**
-     * Returns an array with all the child nodes
+     * Returns an array with all the child nodes.
      *
      * @return DAV\INode[]
      */
-    function getChildren() {
-
+    public function getChildren()
+    {
         $nodes = [];
-        foreach(scandir($this->path) as $node) if($node!='.' && $node!='..' && $node!='.sabredav') $nodes[] = $this->getChild($node);
-        return $nodes;
+        $iterator = new \FilesystemIterator(
+            $this->path,
+            \FilesystemIterator::CURRENT_AS_SELF
+          | \FilesystemIterator::SKIP_DOTS
+        );
 
+        foreach ($iterator as $entry) {
+            $nodes[] = $this->getChild($entry->getFilename());
+        }
+
+        return $nodes;
     }
 
     /**
-     * Deletes all files in this directory, and then itself
+     * Deletes all files in this directory, and then itself.
      *
      * @return bool
      */
-    function delete() {
-
+    public function delete()
+    {
         // Deleting all children
-        foreach($this->getChildren() as $child) $child->delete();
-
-        // Removing resource info, if its still around
-        if (file_exists($this->path . '/.sabredav')) unlink($this->path . '/.sabredav');
+        foreach ($this->getChildren() as $child) {
+            $child->delete();
+        }
 
         // Removing the directory itself
         rmdir($this->path);
 
-        return parent::delete();
-
+        return true;
     }
 
     /**
-     * Returns available diskspace information
+     * Returns available diskspace information.
      *
      * @return array
      */
-    function getQuotaInfo() {
+    public function getQuotaInfo()
+    {
+        $total = disk_total_space(realpath($this->path));
+        $free = disk_free_space(realpath($this->path));
 
         return [
-            disk_total_space($this->path)-disk_free_space($this->path),
-            disk_free_space($this->path)
+            $total - $free,
+            $free,
         ];
-
     }
 
     /**
@@ -170,27 +190,23 @@ class Directory extends Node implements DAV\ICollection, DAV\IQuota, DAV\IMoveTa
      * the move itself. If you return true from this function, the assumption
      * is that the move was successful.
      *
-     * @param string $targetName New local file/collection name.
-     * @param string $sourcePath Full path to source node
+     * @param string    $targetName new local file/collection name
+     * @param string    $sourcePath Full path to source node
      * @param DAV\INode $sourceNode Source node itself
+     *
      * @return bool
      */
-    function moveInto($targetName, $sourcePath, DAV\INode $sourceNode) {
-
+    public function moveInto($targetName, $sourcePath, DAV\INode $sourceNode)
+    {
         // We only support FSExt\Directory or FSExt\File objects, so
         // anything else we want to quickly reject.
-        if (!$sourceNode instanceof Node) {
+        if (!$sourceNode instanceof self && !$sourceNode instanceof File) {
             return false;
         }
 
         // PHP allows us to access protected properties from other objects, as
-        // long as they are defined in a class that has a shared inheritence
+        // long as they are defined in a class that has a shared inheritance
         // with the current class.
-        rename($sourceNode->path, $this->path . '/' . $targetName);
-
-        return true;
-
+        return rename($sourceNode->path, $this->path.'/'.$targetName);
     }
-
 }
-

@@ -1,57 +1,67 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sabre\HTTP\Auth;
 
 use Sabre\HTTP\Request;
 use Sabre\HTTP\Response;
 
-class BasicTest extends \PHPUnit_Framework_TestCase {
-
-    function testGetCredentials() {
-
-        $request = new Request('GET','/',array(
-            'Authorization' => 'Basic ' . base64_encode('user:pass:bla')
-        ));
+class BasicTest extends \PHPUnit\Framework\TestCase
+{
+    public function testGetCredentials()
+    {
+        $request = new Request('GET', '/', [
+            'Authorization' => 'Basic '.base64_encode('user:pass:bla'),
+        ]);
 
         $basic = new Basic('Dagger', $request, new Response());
 
-        $this->assertEquals(array(
+        $this->assertEquals([
             'user',
             'pass:bla',
-        ), $basic->getCredentials($request));
-
+        ], $basic->getCredentials());
     }
 
-    function testGetCredentialsNoheader() {
+    public function testGetInvalidCredentialsColonMissing()
+    {
+        $request = new Request('GET', '/', [
+            'Authorization' => 'Basic '.base64_encode('userpass'),
+        ]);
 
-        $request = new Request('GET','/',array());
         $basic = new Basic('Dagger', $request, new Response());
 
-        $this->assertNull($basic->getCredentials($request));
-
+        $this->assertNull($basic->getCredentials());
     }
 
-    function testGetCredentialsNotBasic() {
-
-        $request = new Request('GET','/',array(
-            'Authorization' => 'QBasic ' . base64_encode('user:pass:bla')
-        ));
+    public function testGetCredentialsNoHeader()
+    {
+        $request = new Request('GET', '/', []);
         $basic = new Basic('Dagger', $request, new Response());
 
-        $this->assertNull($basic->getCredentials($request));
-
+        $this->assertNull($basic->getCredentials());
     }
 
-    function testRequireLogin() {
+    public function testGetCredentialsNotBasic()
+    {
+        $request = new Request('GET', '/', [
+            'Authorization' => 'QBasic '.base64_encode('user:pass:bla'),
+        ]);
+        $basic = new Basic('Dagger', $request, new Response());
 
+        $this->assertNull($basic->getCredentials());
+    }
+
+    public function testRequireLogin()
+    {
         $response = new Response();
-        $basic = new Basic('Dagger', new Request(), $response);
+        $request = new Request('GET', '/');
+
+        $basic = new Basic('Dagger', $request, $response);
 
         $basic->requireLogin();
 
-        $this->assertEquals('Basic realm="Dagger"', $response->getHeader('WWW-Authenticate'));
+        $this->assertEquals('Basic realm="Dagger", charset="UTF-8"', $response->getHeader('WWW-Authenticate'));
         $this->assertEquals(401, $response->getStatus());
-
     }
-
 }

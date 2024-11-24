@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sabre\DAV;
 
 /**
@@ -7,18 +9,18 @@ namespace Sabre\DAV;
  * nodes may be moved into this collection".
  *
  * The benefit of this, is that sabre/dav will by default perform a move, by
- * tranfersing an entire directory tree, copying every collection, and deleting
+ * transferring an entire directory tree, copying every collection, and deleting
  * every item.
  *
  * If a backend supports a better optimized move operation, this can trigger
  * some huge speed gains.
  *
- * @copyright Copyright (C) 2007-2014 fruux GmbH. All rights reserved.
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
  * @author Evert Pot (http://evertpot.com/)
- * @license http://code.google.com/p/sabredav/wiki/License Modified BSD License
+ * @license http://sabre.io/license/ Modified BSD License
  */
-interface IMoveTarget extends ICollection {
-
+interface IMoveTarget extends ICollection
+{
     /**
      * Moves a node into this collection.
      *
@@ -34,11 +36,11 @@ interface IMoveTarget extends ICollection {
      * the move itself. If you return true from this function, the assumption
      * is that the move was successful.
      *
-     * @param string $targetName New local file/collection name.
+     * @param string $targetName new local file/collection name
      * @param string $sourcePath Full path to source node
-     * @param INode $sourceNode Source node itself
+     * @param INode  $sourceNode Source node itself
+     *
      * @return bool
      */
-    function moveInto($targetName, $sourcePath, INode $sourceNode);
-
+    public function moveInto($targetName, $sourcePath, INode $sourceNode);
 }

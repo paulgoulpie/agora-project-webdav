@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sabre\HTTP;
 
 /**
@@ -8,51 +10,41 @@ namespace Sabre\HTTP;
  * By default the Client will not emit these, this has to be explicitly enabled
  * with the setThrowExceptions method.
  *
- * @copyright Copyright (C) 2009-2014 fruux GmbH. All rights reserved.
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-class ClientHttpException extends \Exception implements HttpException {
-
+class ClientHttpException extends \Exception implements HttpException
+{
     /**
-     * Response object
+     * Response object.
      *
      * @var ResponseInterface
      */
     protected $response;
 
     /**
-     * Constructor
-     *
-     * @param ResponseInterface $response
+     * Constructor.
      */
-    function __construct(ResponseInterface $response) {
-
+    public function __construct(ResponseInterface $response)
+    {
         $this->response = $response;
         parent::__construct($response->getStatusText(), $response->getStatus());
-
     }
 
     /**
      * The http status code for the error.
-     *
-     * @return int
      */
-    function getHttpStatus() {
-
+    public function getHttpStatus(): int
+    {
         return $this->response->getStatus();
-
     }
 
     /**
      * Returns the full response object.
-     *
-     * @return ResponseInterface
      */
-    function getResponse() {
-
+    public function getResponse(): ResponseInterface
+    {
         return $this->response;
-
     }
-
 }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Sabre\CalDAV\Notifications;
 
 use Sabre\DAV;
@@ -14,10 +16,10 @@ use Sabre\DAV;
  * This collection should only return Sabre\CalDAV\Notifications\INode nodes as
  * its children.
  *
- * @copyright Copyright (C) 2007-2014 fruux GmbH (https://fruux.com/).
+ * @copyright Copyright (C) fruux GmbH (https://fruux.com/)
  * @author Evert Pot (http://evertpot.com/)
  * @license http://sabre.io/license/ Modified BSD License
  */
-interface ICollection extends DAV\ICollection {
-
+interface ICollection extends DAV\ICollection
+{
 }
